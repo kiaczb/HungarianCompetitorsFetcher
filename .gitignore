@@ -29,6 +29,7 @@
 data/
 env.py
 newmain.py
+temp.py
 
 # OS generated files #
 ######################

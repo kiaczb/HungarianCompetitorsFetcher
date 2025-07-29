@@ -4,6 +4,7 @@ from env import excludedCompetitorWcaIds, badges
 from recordsManager import localNationalRecords
 import requests
 from concurrent.futures import ThreadPoolExecutor
+import flatdict
 
 def update_records(record_type, value, competitor, event_id, localNationalRecords, badges):
     #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
@@ -19,45 +20,54 @@ def update_records(record_type, value, competitor, event_id, localNationalRecord
                     competitor.Records[event_id] = [Record(record_type, value, badges[index])]
                 break
 
-def process_person(person, events, isHungarianCompetition = False):
-
+def process_person(person, events, isHungarianCompetition=False):
     if person["countryIso2"] != "HU" and person["wcaId"] not in excludedCompetitorWcaIds:
-        return None  # Ha nem magyar vagy  Alexey, nem dolgozzuk fel.
+        return None  # Skip non-Hungarian and non-exceptional competitors.
 
+    if not person.get("registration"):
+        return None
+
+    registered_event_ids = set(person["registration"]["eventIds"])
     competitor = None
 
-    # Most minden eseményhez egy dict-et tárolunk, ahol külön kulcsokban van az "average" és a "single"
-    
-    #TODO Remove the nested for loops using flatdict or recursion
+    def is_person_result(result):
+        return result.get("personId") == person["registrantId"]
+
     for event in events:
-        if person["registration"] and event["id"] not in person["registration"]["eventIds"]:
-            continue  # Ha nem regisztrált az adott eventre, kihagyjuk.
+        if event["id"] not in registered_event_ids:
+            continue
+
         isAdvanced = True
-        for _round in event["rounds"]:
+
+        # Flatten all rounds and results into a single list of (round, result) pairs
+        round_result_pairs = [
+            (_round, result)
+            for _round in event.get("rounds", [])
+            for result in _round.get("results", [])
+            if is_person_result(result)
+        ]
+
+        for _round, result in round_result_pairs:
             if not isAdvanced:
                 break
-            for result in _round["results"]:
-                if result["personId"] != person["registrantId"]:
-                    continue
 
-                if competitor is None:
-                    competitor = CompetitorWithRecords(person["name"], person["wcaId"])
+            if competitor is None:
+                competitor = CompetitorWithRecords(person["name"], person["wcaId"])
 
-                #best = personal_bests.get(event["id"], {})
-                # Átlag rekord ellenőrzés
-                update_records("average", result["average"], competitor, event["id"], localNationalRecords, badges)
+            update_records("average", result["average"], competitor, event["id"], localNationalRecords, badges)
+            update_records("single", result["best"], competitor, event["id"], localNationalRecords, badges)
 
-                    # Single rekord ellenőrzés
-                update_records("single", result["best"],  competitor, event["id"], localNationalRecords, badges)
-                # Ha nem jut tovább, állítsuk akkor isAdvanced = False
-                if _round["advancementCondition"]:
-                    adv = _round["advancementCondition"]
-                    if result["ranking"]:
-                        if (adv["type"] == "ranking" and result["ranking"] > adv["level"]) or \
-                        (adv["type"] == "percent" and result["ranking"] > len(_round["results"]) * (round(adv["level"] / 100))):
-                            isAdvanced = False
-    if competitor and isHungarianCompetition and competitor.Records == {}: #Ha létezik a versenyző de magyar verseny volt és nem rakott rekordot
+            adv = _round.get("advancementCondition")
+            if adv and result.get("ranking"):
+                if adv["type"] == "ranking":
+                    isAdvanced = result["ranking"] <= adv["level"]
+                elif adv["type"] == "percent":
+                    threshold = round(len(_round["results"]) * (adv["level"] / 100))
+                    isAdvanced = result["ranking"] <= threshold
+
+    if competitor and isHungarianCompetition and not competitor.Records:
         return None
+
     return competitor
 
 

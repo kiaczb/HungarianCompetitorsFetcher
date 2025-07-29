@@ -1,11 +1,12 @@
 import json
 output = []
-difference = 5
-milestones = [100, 200]
+difference = 25
+milestones = [70, 200]
 def readPersons():
     with open('./data/hungarians.json', 'r', encoding="utf-8") as file:
         return json.load(file)
 
+#TODO: Don't return a competitor twice, but count their competitions according to theri attendance
 checkedCompetitors = []
 localPersons = readPersons()
 def getImportantCompetitors(persons):

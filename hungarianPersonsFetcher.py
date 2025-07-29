@@ -1,5 +1,6 @@
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from env import excludedCompetitorWcaIds
 import json
 
 def fetch_persons_page(page):
@@ -38,7 +39,7 @@ def getHungarianCompetitors():
                     any_nonempty = True
 
                 for person in personData["items"]:
-                    if person["country"] == "HU":
+                    if person["country"] == "HU" or person["id"] in excludedCompetitorWcaIds:
                         wca_id = person["id"]
                         name = person["name"]
                         competition_count = person["numberOfCompetitions"]

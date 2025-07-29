@@ -1,44 +1,48 @@
-
 import smtplib
 from email.mime.text import MIMEText
-import competitionCount
+from jinja2 import Environment, FileSystemLoader
+from competitionCount import getImportantCompetitors
 from utils import ConvertResult, ConvertDate
 from env import emailFrom, emailTo, emailSubject, emailCode
 
+env = Environment(loader=FileSystemLoader('templates'))
+
 def WriteEmail(competitionsWithHungarians):
-    message= ""
-    competitionCountCompetitiorsMessage = "Upcoming milestones: \n"
-    countCompetitors = []
-    if competitionsWithHungarians:
-        for comp in competitionsWithHungarians:
-            message+= (f"{ConvertDate(comp.From, comp.To)}\n{comp.CompetitionName} ({comp.CountryIso}):\n")
-            countCompetitors = competitionCount.getImportantCompetitors(comp.CompetitorWithRecords)
-            for person in comp.CompetitorWithRecords:
-                message+= f"\t- {person.CompetitorName}\n"
-                for event, record in person.Records.items():
-                    message+= f"\t\tEvent: {event}\n"
-                    for item in record:
-                        message+= f"\t\tType: {item.Type}\n"
-                        message+= f"\t\t   -Result: {ConvertResult(item.Result, event)}\n"
-                        message+= f"\t\t   -Record Type: {item.Badge}\n"
-                    #message+="------------------------------------------------------\n"
-            message+= "----------------------------------------------------------------------------------\n"
-    else:
-        message = "No competitions"
-    for countCompetitor in countCompetitors:
-        competitionCountCompetitiorsMessage+= f"{countCompetitor['name']} - {countCompetitor['competition_count']}\n"
-    message += competitionCountCompetitiorsMessage
-    msg = MIMEText(message, 'plain', 'utf-8')
-    msg['From'] = f" Bonsz <{emailFrom}>"
+    count_competitors = get_all_important_competitors(competitionsWithHungarians)
+    
+    html_content = render_html_email(competitionsWithHungarians, count_competitors)
+    
+    send_email(html_content)
+
+def render_html_email(competitions, count_competitors):
+    template = env.get_template('emailTemplate.html')
+    return template.render(
+        competitions=competitions,
+        count_competitors=count_competitors,
+        convert_date=ConvertDate,
+        convert_result=ConvertResult
+    )
+
+def get_all_important_competitors(competitions):
+    count_competitors = []
+    if competitions:
+        for comp in competitions:
+            count_competitors.extend(getImportantCompetitors(comp.CompetitorWithRecords))
+    return count_competitors
+
+def send_email(html_body):
+    msg = MIMEText(html_body, 'html', 'utf-8')
+    msg['From'] = f"Bonsz <{emailFrom}>"
     msg['To'] = emailTo
     msg['Subject'] = emailSubject
+
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.starttls()
 
     try:
-
         server.login(emailFrom, emailCode)
-        server.sendmail(emailFrom,emailTo,msg.as_string())
-    except:
-        print("Email failed to send")
-    server.quit()
+        server.sendmail(emailFrom, emailTo, msg.as_string())
+    except Exception as e:
+        print(f"Email failed to send: {str(e)}")
+    finally:
+        server.quit()

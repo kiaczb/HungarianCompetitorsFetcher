@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from competitors import GetCompetitorsForCompetition
 from models.Competition import Competition
 
@@ -23,8 +23,8 @@ def GetCompetitionIds(date):
         pageCount = 1
         end = False
         while not end:
-            competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start={date.strftime('%Y-%m-%d')}&end={datetime.now().strftime('%Y-%m-%d')}&page={pageCount}"
-            # competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start=2025-05-23&end=2025-05-26&page={pageCount}"
+            #competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start={date.strftime('%Y-%m-%d')}&end={datetime.now().strftime('%Y-%m-%d')}&page={pageCount}"
+            competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start=2025-06-19&end=2025-06-22&page={pageCount}"
             response = requests.get(competitionsUrl)
             if response.status_code != 200:
                 print("Error")
