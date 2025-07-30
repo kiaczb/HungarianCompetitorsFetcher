@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from env import excludedCompetitorWcaIds
 import json
 
-def fetch_persons_page(page):
+def FetchPersonsPage(page):
     url = f"https://raw.githubusercontent.com/robiningelbrecht/wca-rest-api/master/api/persons-page-{page}.json"
     try:
         response = requests.get(url, timeout=10)
@@ -13,7 +13,7 @@ def fetch_persons_page(page):
     except:
         return []
 
-def getHungarianCompetitors():
+def GetHungarianCompetitors():
     persons = {}
     batch_size = 100
     max_workers = 20
@@ -25,7 +25,7 @@ def getHungarianCompetitors():
         futures = []
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             for i in range(batch_size):
-                futures.append(executor.submit(fetch_persons_page, page + i))
+                futures.append(executor.submit(FetchPersonsPage, page + i))
 
             any_nonempty = False
 
@@ -57,6 +57,6 @@ def getHungarianCompetitors():
     return persons
 
 
-data = getHungarianCompetitors()
+data = GetHungarianCompetitors()
 with open("./data/hungarians.json", "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)

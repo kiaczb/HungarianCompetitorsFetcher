@@ -3,10 +3,10 @@ from models.CompetitorWithRecords import CompetitorWithRecords
 from env import excludedCompetitorWcaIds, badges
 from recordsManager import localNationalRecords
 import requests
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import flatdict
 
-def update_records(record_type, value, competitor, event_id, localNationalRecords, badges):
+def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords, badges):
     #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
     if value > 0:
         for index, nationalRecord in enumerate(localNationalRecords.values()):
@@ -20,7 +20,7 @@ def update_records(record_type, value, competitor, event_id, localNationalRecord
                     competitor.Records[event_id] = [Record(record_type, value, badges[index])]
                 break
 
-def process_person(person, events, isHungarianCompetition=False):
+def ProcessPerson(person, events, isHungarianCompetition=False):
     if person["countryIso2"] != "HU" and person["wcaId"] not in excludedCompetitorWcaIds:
         return None  # Skip non-Hungarian and non-exceptional competitors.
 
@@ -30,7 +30,7 @@ def process_person(person, events, isHungarianCompetition=False):
     registered_event_ids = set(person["registration"]["eventIds"])
     competitor = None
 
-    def is_person_result(result):
+    def IsPersonResult(result):
         return result.get("personId") == person["registrantId"]
 
     for event in events:
@@ -44,7 +44,7 @@ def process_person(person, events, isHungarianCompetition=False):
             (_round, result)
             for _round in event.get("rounds", [])
             for result in _round.get("results", [])
-            if is_person_result(result)
+            if IsPersonResult(result)
         ]
 
         for _round, result in round_result_pairs:
@@ -54,8 +54,8 @@ def process_person(person, events, isHungarianCompetition=False):
             if competitor is None:
                 competitor = CompetitorWithRecords(person["name"], person["wcaId"])
 
-            update_records("average", result["average"], competitor, event["id"], localNationalRecords, badges)
-            update_records("single", result["best"], competitor, event["id"], localNationalRecords, badges)
+            UpdateRecords("average", result["average"], competitor, event["id"], localNationalRecords, badges)
+            UpdateRecords("single", result["best"], competitor, event["id"], localNationalRecords, badges)
 
             adv = _round.get("advancementCondition")
             if adv and result.get("ranking"):
@@ -86,9 +86,28 @@ def GetCompetitorsForCompetition(comp):
     isHungarianCompetition = True if comp["country_iso2"] == "HU" else False
 
     with ThreadPoolExecutor() as executor:
-        results = list(executor.map(lambda p: process_person(p, events,isHungarianCompetition), persons))
+        results = list(executor.map(lambda p: ProcessPerson(p, events,isHungarianCompetition), persons))
 
     # Csak a nem None versenyzőket adjuk hozzá
     competitors = [c for c in results if c]
 
     return competitors
+
+def GetCompetitionsParallel(competitions):
+    results = []
+
+    def process(comp):
+        competitors = GetCompetitorsForCompetition(comp)
+        return (comp, competitors)
+
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(process, comp) for comp in competitions]
+        for future in as_completed(futures):
+            try:
+                result = future.result()
+                if result:
+                    results.append(result)  # (comp, competitors)
+            except Exception as e:
+                print(f"Hiba a verseny feldolgozásakor: {e}")
+
+    return results
