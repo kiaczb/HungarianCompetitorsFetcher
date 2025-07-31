@@ -1,16 +1,17 @@
-from models.Record import Record
-from models.CompetitorWithRecords import CompetitorWithRecords
+from CompetitionModels.Record import Record
+from CompetitionModels.CompetitorWithRecords import CompetitorWithRecords
 from env import excludedCompetitorWcaIds, badges
 from recordsManager import localNationalRecords
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import flatdict
-
+from CompetitionModels.Competition import Competition
+from competitionCount import IsImportantCompetitor, AddCompetitionToCompetitor
+import time
 def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords, badges):
     #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
     if value > 0:
         for index, nationalRecord in enumerate(localNationalRecords.values()):
-            if competitor.WcaId in excludedCompetitorWcaIds and index == 2:
+            if competitor.WcaId in excludedCompetitorWcaIds and index == 2: #If the person is not representing Hungary but a member of the Hungarian community
                 continue
             if value <= nationalRecord[event_id][record_type]:
                 nationalRecord[event_id][record_type] = value
@@ -20,7 +21,7 @@ def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords
                     competitor.Records[event_id] = [Record(record_type, value, badges[index])]
                 break
 
-def ProcessPerson(person, events, isHungarianCompetition=False):
+def ProcessPerson(person, events):
     if person["countryIso2"] != "HU" and person["wcaId"] not in excludedCompetitorWcaIds:
         return None  # Skip non-Hungarian and non-exceptional competitors.
 
@@ -65,28 +66,42 @@ def ProcessPerson(person, events, isHungarianCompetition=False):
                     threshold = round(len(_round["results"]) * (adv["level"] / 100))
                     isAdvanced = result["ranking"] <= threshold
 
-    if competitor and isHungarianCompetition and not competitor.Records:
-        return None
-
+    if IsImportantCompetitor(competitor):
+        print(competitor.CompetitorName)
+        AddCompetitionToCompetitor(competitor.WcaId)
+        
+    
     return competitor
 
+def IsHungarianCompetition(comp):
+     return True if comp["country_iso2"] == "HU" else False
 
 def GetCompetitorsForCompetition(comp):
-    """Lekéri a versenyzőket és párhuzamosan feldolgozza őket."""
-    competitorsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions/{comp['id']}/wcif/public"
-    #competitorsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions/BudapestSummer2024/wcif/public"
-    response = requests.get(competitorsUrl)
-    if response.status_code != 200:
-        return [], comp
+    url = f"https://www.worldcubeassociation.org/api/v0/competitions/{comp['id']}/wcif/public"
+    for attempt in range(5):
+        response = requests.get(url)
+        if response.status_code == 200:
+            break
+        elif response.status_code == 429:
+            wait = 2 ** attempt  # 1s, 2s, 4s, 8s, …
+            time.sleep(wait)
+            continue
+        else:
+            print(f"HTTP {response.status_code} for {comp['id']}")
+            return []
+    else:
+        print(f"Too many retries for {comp['id']}")
+        return []
+
+    # itt már biztosan response.status_code == 200
     competitionWCIF = response.json()
     persons = competitionWCIF["persons"]
     events = competitionWCIF["events"]
     competitors = []
 
-    isHungarianCompetition = True if comp["country_iso2"] == "HU" else False
 
     with ThreadPoolExecutor() as executor:
-        results = list(executor.map(lambda p: ProcessPerson(p, events,isHungarianCompetition), persons))
+        results = list(executor.map(lambda p: ProcessPerson(p, events), persons))
 
     # Csak a nem None versenyzőket adjuk hozzá
     competitors = [c for c in results if c]
@@ -98,7 +113,8 @@ def GetCompetitionsParallel(competitions):
 
     def process(comp):
         competitors = GetCompetitorsForCompetition(comp)
-        return (comp, competitors)
+        if competitors:
+            return Competition(comp["name"], comp["country_iso2"], comp["start_date"], comp["end_date"], IsHungarianCompetition(comp), competitors)
 
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(process, comp) for comp in competitions]

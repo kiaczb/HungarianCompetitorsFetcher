@@ -10,8 +10,10 @@ competitionsWithHungarians = GetCompetitionsWithHungarians(date)
 end = time.time()
 print(f"Runtime: {end - start:.4f} seconds")
 
-#TODO Figure out why a person object can be null
-WriteEmail(competitionsWithHungarians)
-# email_sender = CompetitionEmailSender()
-# email_sender.send_competition_email(competitionsWithHungarians)
 
+WriteEmail(competitionsWithHungarians)
+
+#TODO Clean up and layering
+#TODO Add comments
+#TODO Get delegates and their upcoming milestones
+#TODO Predict the milestone competition

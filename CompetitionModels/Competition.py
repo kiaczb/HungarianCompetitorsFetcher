@@ -1,10 +1,11 @@
 from datetime import datetime
 class Competition:
-    def __init__(self, name, iso, From, to, competitorWResults):
+    def __init__(self, name, iso, From, to, isHun, competitorWResults):
         self.CompetitionName = name
         self.CountryIso = iso
         self.From = self._ensure_datetime(From)
         self.To = self._ensure_datetime(to)
+        self.isHungarian = isHun
         self.CompetitorWithRecords = competitorWResults
         
     def AddPerson(self, competitorWithRecord):

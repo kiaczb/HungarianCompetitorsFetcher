@@ -5,7 +5,7 @@ from competitionCount import GetImportantCompetitors
 from utils import ConvertResult, ConvertDate
 from env import emailFrom, emailTo, emailSubject, emailCode
 
-env = Environment(loader=FileSystemLoader('templates'))
+environment = Environment(loader=FileSystemLoader('templates'))
 
 def WriteEmail(competitionsWithHungarians):
     count_competitors = GetAllImportantCompetitors(competitionsWithHungarians)
@@ -14,23 +14,32 @@ def WriteEmail(competitionsWithHungarians):
     
     SendEmail(html_content)
 
-def RenderHtmlEmail(competitions, count_competitors):
-    template = env.get_template('emailTemplate.html')
+def RenderHtmlEmail(competitionsWithHungarians, count_competitors):
+    template = environment.get_template('emailTemplate.html')
+    excludedHungarianCompetitions = []
+    for comp in competitionsWithHungarians:
+        if not comp.isHungarian:
+            excludedHungarianCompetitions.append(comp)
+        else:
+            for person in comp.CompetitorWithRecords:
+                if person.Records:
+                    excludedHungarianCompetitions.append(comp)
     return template.render(
-        competitions=competitions,
+        competitions=excludedHungarianCompetitions,
         count_competitors=count_competitors,
         convert_date=ConvertDate,
         convert_result=ConvertResult
     )
 
 def GetAllImportantCompetitors(competitions):
-    count_competitors = []
-    if competitions:
-        for comp in competitions:
-            importantCompetitorsByCompetition = GetImportantCompetitors(comp.CompetitorWithRecords)
-            if importantCompetitorsByCompetition not in count_competitors:
-                count_competitors.extend(importantCompetitorsByCompetition)
-    return count_competitors
+    competitors_by_id = {}
+
+    for comp in competitions:
+        for competitor in GetImportantCompetitors(comp.CompetitorWithRecords):
+            print(competitor)
+            competitors_by_id[competitor["wca_id"]] = competitor  # felülírja, ha már volt ilyen
+
+    return list(competitors_by_id.values())
 
 def SendEmail(html_body):
     msg = MIMEText(html_body, 'html', 'utf-8')

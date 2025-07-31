@@ -16,7 +16,7 @@ def FetchPersonsPage(page):
 def GetHungarianCompetitors():
     persons = {}
     batch_size = 100
-    max_workers = 20
+    max_workers = 4
     page = 1
     empty_pages_in_a_row = 0
     max_empty_pages = 5
@@ -44,6 +44,7 @@ def GetHungarianCompetitors():
                         name = person["name"]
                         competition_count = person["numberOfCompetitions"]
                         persons[wca_id] = {
+                            "wca_id": wca_id,
                             "name": name,
                             "competition_count": competition_count
                         }

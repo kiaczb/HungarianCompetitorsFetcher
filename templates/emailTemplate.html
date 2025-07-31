@@ -39,15 +39,16 @@
             </div>
         {% endfor %}
     {% else %}
-        <p>No competitions.</p>
+        <h3>No competitions.</h3>
     {% endif %}
-
-    <hr>
-    <h3>Upcoming Milestones:</h3>
-    <ul>
-        {% for competitor in count_competitors %}
-            <li>{{ competitor.name }} - {{ competitor.competition_count }}</li>
-        {% endfor %}
-    </ul>
+    {% if count_competitors %}
+        <hr>
+        <h3>Upcoming Competition Milestones:</h3>
+        <ul>
+            {% for competitor in count_competitors %}
+                <li>{{ competitor.name }} - {{ competitor.competition_count }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
 </body>
 </html>

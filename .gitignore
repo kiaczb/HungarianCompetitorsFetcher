@@ -30,6 +30,7 @@ data/
 env.py
 newmain.py
 temp.py
+.venv
 
 # OS generated files #
 ######################

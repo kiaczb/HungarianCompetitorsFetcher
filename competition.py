@@ -1,21 +1,15 @@
 import requests
 from datetime import datetime, timedelta
 from competitors import GetCompetitionsParallel
-from models.Competition import Competition
+from CompetitionModels.Competition import Competition
 
 def GetCompetitionsWithHungarians(date):
     competitions = GetCompetitionIds(date)
-    outputs = []
-
+    #outputs = []
     competition_results = GetCompetitionsParallel(competitions)
 
-    for comp, competitors in competition_results:
-        if competitors:
-            output = Competition(comp["name"], comp["country_iso2"], comp["start_date"], comp["end_date"], competitors)
-            outputs.append(output)
-
-    if outputs:
-        return sorted(outputs, key=lambda oput: oput.To)
+    if competition_results:
+        return sorted(competition_results, key=lambda oput: oput.To)
     else:
         print("Nincs elérhető verseny.")
         return []       
@@ -26,7 +20,7 @@ def GetCompetitionIds(date):
         end = False
         while not end:
             #competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start={date.strftime('%Y-%m-%d')}&end={datetime.now().strftime('%Y-%m-%d')}&page={pageCount}"
-            competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start=2025-06-10&end=2025-07-27&page={pageCount}"
+            competitionsUrl = f"https://www.worldcubeassociation.org/api/v0/competitions?sort=start_date&start=2025-07-01&end=2025-07-27&page={pageCount}"
             response = requests.get(competitionsUrl)
             if response.status_code != 200:
                 print("Error")
@@ -38,3 +32,4 @@ def GetCompetitionIds(date):
             competitionIds += competitionData
             pageCount += 1
         return competitionIds
+
