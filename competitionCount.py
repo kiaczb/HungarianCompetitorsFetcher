@@ -1,7 +1,7 @@
 import json
 
 difference = 3
-milestones = [100, 200]
+milestones = [84, 200]
 def ReadPeople():
     with open('./data/hungarians.json', 'r', encoding="utf-8") as file:
         return json.load(file)

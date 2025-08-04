@@ -1,0 +1,8 @@
+{% if competitions %}
+    <h3>Competitions:</h3>
+    {% for comp in competitions %}
+        {% include "components/competition.html" %}
+    {% endfor %}
+{% else %}
+    <h3>No competitions.</h3>
+{% endif %}

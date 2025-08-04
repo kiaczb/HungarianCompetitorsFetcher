@@ -1,0 +1,8 @@
+<li class="event">{{ event }}
+    <ul>
+        {% for record in records %}
+            {% set record_data = record %}
+            {% include "components/record.html" %}
+        {% endfor %}
+    </ul>
+</li>

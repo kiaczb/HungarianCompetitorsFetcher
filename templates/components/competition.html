@@ -1,0 +1,9 @@
+<div class="competition">
+    <h4>{{ convert_date(comp.From, comp.To) }} - {{ comp.CompetitionName }} ({{ comp.CountryIso }})</h4>
+    <ul>
+        {% for competitor in comp.CompetitorWithRecords %}
+            {% set competitor_data = competitor %}
+            {% include "components/competitor.html" %}
+        {% endfor %}
+    </ul>
+</div>

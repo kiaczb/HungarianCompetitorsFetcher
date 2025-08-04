@@ -1,0 +1,27 @@
+{% if count_competitors or delegate_milestones %}
+    <hr>
+    <div class="milestone-container">
+        {% if count_competitors %}
+            <div class="milestone-section">
+                <h3>Upcoming Competition Milestones</h3>
+                <ul>
+                    {% for competitor in count_competitors %}
+                        <li>{{ competitor.name }} – {{ competitor.competition_count }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% if delegate_milestones %}
+            <div class="milestone-section">
+                <h3>Delegate Milestones</h3>
+                <ul>
+                    {% for delegate in delegate_milestones %}
+                        <li>{{ delegate.name }} – {{ delegate.delegated_competitions_count }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+    
+{% endif %}
