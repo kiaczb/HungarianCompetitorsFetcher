@@ -5,7 +5,7 @@ from recordsManager import localNationalRecords
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from CompetitionModels.Competition import Competition
-from competitionCount import IsImportantCompetitor, AddCompetitionToCompetitor
+from competitionCount import AddCompetitionToCompetitor, SaveToHungariansJson
 import time
 def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords, badges):
     #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
@@ -29,7 +29,7 @@ def ProcessPerson(person, events):
         return None
 
     registered_event_ids = set(person["registration"]["eventIds"])
-    competitor = None
+    competitor = CompetitorWithRecords(person["name"], person["wcaId"])
 
     def IsPersonResult(result):
         return result.get("personId") == person["registrantId"]
@@ -52,9 +52,6 @@ def ProcessPerson(person, events):
             if not isAdvanced:
                 break
 
-            if competitor is None:
-                competitor = CompetitorWithRecords(person["name"], person["wcaId"])
-
             UpdateRecords("average", result["average"], competitor, event["id"], localNationalRecords, badges)
             UpdateRecords("single", result["best"], competitor, event["id"], localNationalRecords, badges)
 
@@ -66,9 +63,7 @@ def ProcessPerson(person, events):
                     threshold = round(len(_round["results"]) * (adv["level"] / 100))
                     isAdvanced = result["ranking"] <= threshold
 
-    if IsImportantCompetitor(competitor):
-        print(competitor.CompetitorName)
-        AddCompetitionToCompetitor(competitor.WcaId)
+    AddCompetitionToCompetitor(competitor)
         
     
     return competitor
@@ -103,6 +98,7 @@ def GetCompetitorsForCompetition(comp):
     with ThreadPoolExecutor() as executor:
         results = list(executor.map(lambda p: ProcessPerson(p, events), persons))
 
+    SaveToHungariansJson()
     # Csak a nem None versenyzőket adjuk hozzá
     competitors = [c for c in results if c]
 

@@ -21,9 +21,15 @@ def RenderHtmlEmail(competitionsWithHungarians, count_competitors):
         if not comp.isHungarian:
             excludedHungarianCompetitions.append(comp)
         else:
+            recorders = []
             for person in comp.CompetitorWithRecords:
                 if person.Records:
-                    excludedHungarianCompetitions.append(comp)
+                    recorders.append(person)
+            comp.CompetitorWithRecords = recorders
+            if recorders:
+                excludedHungarianCompetitions.append(comp)
+
+
     return template.render(
         competitions=excludedHungarianCompetitions,
         count_competitors=count_competitors,

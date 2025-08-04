@@ -11,16 +11,30 @@ localPeople = ReadPeople()
 def GetImportantCompetitors(persons):
     importantCompetitors = []
     for person in persons:
-        if IsImportantCompetitor(person):
+        if IsImportantCompetitor(person.WcaId):
             importantCompetitors.append(localPeople[person.WcaId])
     return importantCompetitors
 
-def AddCompetitionToCompetitor(WcaId):
-    localPeople[WcaId]["competition_count"] += 1
+def AddCompetitionToCompetitor(competitor):
+    if not competitor.WcaId:
+        return
+    if competitor.WcaId not in localPeople:
+        localPeople[competitor.WcaId] = {
+            "wca_id": competitor.WcaId,
+            "name": competitor.CompetitorName,
+            "competition_count": 1
+        }
+    else:
+        localPeople[competitor.WcaId]["competition_count"] += 1
+
+def SaveToHungariansJson():
     with open("./data/hungarians.json", "w", encoding="utf-8") as f:
         json.dump(localPeople, f, indent=2, ensure_ascii=False)
+    
 
-def IsImportantCompetitor(competitor):
+def IsImportantCompetitor(wcaId):
+    if not wcaId or wcaId not in localPeople:
+        return False
     for milestone in milestones:
-            if competitor and (milestone-difference < localPeople[competitor.WcaId]["competition_count"] <= milestone):
+            if (milestone-difference <= localPeople[wcaId]["competition_count"] <= milestone):
                 return True
