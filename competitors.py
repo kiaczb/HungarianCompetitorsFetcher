@@ -119,14 +119,11 @@ def GetCompetitionsParallel(competitions):
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(process, comp) for comp in competitions]
         for future in as_completed(futures):
-            result = future.result()
-            if result:
-                results.append(result)
-            # try:
-            #     result = future.result()
-            #     if result:
-            #         results.append(result)  # (comp, competitors)
-            # except Exception as e:
-            #     print(f"Hiba a verseny feldolgozásakor: {e}")
+            try:
+                result = future.result()
+                if result:
+                    results.append(result)  # (comp, competitors)
+            except Exception as e:
+                print(f"Hiba a verseny feldolgozásakor: {e}")
 
     return results

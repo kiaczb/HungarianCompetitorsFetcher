@@ -6,7 +6,7 @@ def ReadPeople():
     with open('./data/delegates.json', 'r', encoding="utf-8") as file:
         return json.load(file)
 
-#TODO: Add comp_count locally
+
 localDelegates = ReadPeople()
 def GetImportantDelegates(persons):
     importantdelegates = []

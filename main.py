@@ -13,7 +13,6 @@ print(f"Runtime: {end - start:.4f} seconds")
 
 WriteEmail(competitionsWithHungarians)
 
-#TODO Clean up and layering
+#TODO Clean up and layering and DI
 #TODO Add comments
-#TODO Get delegates and their upcoming milestones
 #TODO Predict the milestone competition

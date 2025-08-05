@@ -6,7 +6,7 @@ def ReadPeople():
     with open('./data/hungarians.json', 'r', encoding="utf-8") as file:
         return json.load(file)
 
-#TODO: Don't return a competitor twice, but count their competitions according to theri attendance
+
 localPeople = ReadPeople()
 def GetImportantCompetitors(persons):
     importantCompetitors = []
