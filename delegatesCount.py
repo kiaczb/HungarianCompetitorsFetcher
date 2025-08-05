@@ -1,7 +1,7 @@
 import json
 
 difference = 3
-milestones = [40, 100]
+milestones = [50, 100]
 def ReadPeople():
     with open('./data/delegates.json', 'r', encoding="utf-8") as file:
         return json.load(file)
@@ -22,10 +22,10 @@ def AddCompetitionToDelegate(delegate):
         localDelegates[delegate.WcaId] = {
             "wca_id": delegate.WcaId,
             "name": delegate.competitorName,
-            "competition_count": 1
+            "delegated_competitions_count": 1
         }
     else:
-        localDelegates[delegate.WcaId]["competition_count"] += 1
+        localDelegates[delegate.WcaId]["delegated_competitions_count"] += 1
 
 def SaveToDelegatesJson():
     with open("./data/delegates.json", "w", encoding="utf-8") as f:
@@ -39,4 +39,4 @@ def IsImportantDelegate(wcaId):
             if (milestone-difference <= localDelegates[wcaId]["delegated_competitions_count"] <= milestone):
                 return True
 def IsDelegate(person):
-    return True if person.wcaId in localDelegates else False
+    return True if person.WcaId in localDelegates else False

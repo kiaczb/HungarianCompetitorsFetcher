@@ -6,6 +6,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from CompetitionModels.Competition import Competition
 from competitionCount import AddCompetitionToCompetitor, SaveToHungariansJson
+from delegatesCount import IsDelegate, AddCompetitionToDelegate, SaveToDelegatesJson
 import time
 def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords, badges):
     #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
@@ -64,7 +65,9 @@ def ProcessPerson(person, events):
                     isAdvanced = result["ranking"] <= threshold
 
     AddCompetitionToCompetitor(competitor)
-        
+
+    if IsDelegate(competitor):
+        AddCompetitionToDelegate(competitor)
     
     return competitor
 
@@ -99,6 +102,7 @@ def GetCompetitorsForCompetition(comp):
         results = list(executor.map(lambda p: ProcessPerson(p, events), persons))
 
     SaveToHungariansJson()
+    SaveToDelegatesJson()
     # Csak a nem None versenyzőket adjuk hozzá
     competitors = [c for c in results if c]
 
@@ -115,11 +119,14 @@ def GetCompetitionsParallel(competitions):
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(process, comp) for comp in competitions]
         for future in as_completed(futures):
-            try:
-                result = future.result()
-                if result:
-                    results.append(result)  # (comp, competitors)
-            except Exception as e:
-                print(f"Hiba a verseny feldolgozásakor: {e}")
+            result = future.result()
+            if result:
+                results.append(result)
+            # try:
+            #     result = future.result()
+            #     if result:
+            #         results.append(result)  # (comp, competitors)
+            # except Exception as e:
+            #     print(f"Hiba a verseny feldolgozásakor: {e}")
 
     return results
