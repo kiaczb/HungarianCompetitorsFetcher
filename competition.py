@@ -14,7 +14,7 @@ def GetCompetitionsWithHungarians(date):
         return []       
 
 def GetCompetitionIds(date):
-        competitionIds = [] #Ez nem Id hanem konkrét versseny objektum(okat tároló lista) vagy dictionary vagy hashmap tudja a tököm hogy hívják ebben a nyelvben
+        competitionIds = [] #This is not an id it's a competition object list or dict or hashmap or whateve.
         pageCount = 1
         end = False
         while not end:
@@ -25,7 +25,7 @@ def GetCompetitionIds(date):
                 print("Error")
                 end = True
             competitionData = response.json()
-                #Ha túlmegy a pagecount akkor az api egy üres listát ad (ilyet: []) ezért ilyenkor tudjuk hogy végigértünk a versenyeken és leállítjuk
+                #If tha pagecount is bigger than the actual competition list (in the API) the API returns an empty list (like this []). When this happens we know that we went through all of the competitions.
             if not competitionData:
                     end = True
             competitionIds += competitionData

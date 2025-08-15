@@ -9,7 +9,7 @@ from competitionCount import AddCompetitionToCompetitor, SaveToHungariansJson
 from delegatesCount import IsDelegate, AddCompetitionToDelegate, SaveToDelegatesJson
 import time
 def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords, badges):
-    #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
+    #Updates the competitor's recoords and handles national records.
     if value > 0:
         for index, nationalRecord in enumerate(localNationalRecords.values()):
             if competitor.WcaId in excludedCompetitorWcaIds and index == 2: #If the person is not representing Hungary but a member of the Hungarian community
@@ -80,6 +80,7 @@ def GetCompetitorsForCompetition(comp):
         response = requests.get(url)
         if response.status_code == 200:
             break
+        #When we get a 429 error (too muck requests) we wait
         elif response.status_code == 429:
             wait = 2 ** attempt  # 1s, 2s, 4s, 8s, …
             time.sleep(wait)
@@ -91,7 +92,7 @@ def GetCompetitorsForCompetition(comp):
         print(f"Too many retries for {comp['id']}")
         return []
 
-    # itt már biztosan response.status_code == 200
+    # We can make sure that here the response.status_code == 200
     competitionWCIF = response.json()
     persons = competitionWCIF["persons"]
     events = competitionWCIF["events"]
@@ -103,7 +104,7 @@ def GetCompetitorsForCompetition(comp):
 
     SaveToHungariansJson()
     SaveToDelegatesJson()
-    # Csak a nem None versenyzőket adjuk hozzá
+    # We add only the not None competitors.
     competitors = [c for c in results if c]
 
     return competitors

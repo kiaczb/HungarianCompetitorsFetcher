@@ -47,7 +47,7 @@ def GetAllImportantCompetitors(competitions, func): #Gets the important competit
     for comp in competitions:
         for competitor in func(comp.CompetitorWithRecords):
             print(competitor)
-            competitors_by_id[competitor["wca_id"]] = competitor  # felülírja, ha már volt ilyen
+            competitors_by_id[competitor["wca_id"]] = competitor  # Overrides if it's already appeared.
 
     return list(competitors_by_id.values())
 def SendEmail(html_body):
