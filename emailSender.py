@@ -1,12 +1,14 @@
 import smtplib
+import os
 from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader
 from competitionCount import GetImportantCompetitors
 from delegatesCount import GetImportantDelegates
 from utils import ConvertResult, ConvertDate
-from env import emailFrom, emailTo, emailSubject, emailCode
+from env import emailFrom, emailTo, emailSubject, emailCode, SCRIPT_DIR
 
-environment = Environment(loader=FileSystemLoader('templates'))
+templates_path = os.path.join(SCRIPT_DIR, 'templates')
+environment = Environment(loader=FileSystemLoader(templates_path))
 
 def WriteEmail(competitionsWithHungarians):
     count_competitors = GetAllImportantCompetitors(competitionsWithHungarians, GetImportantCompetitors)
@@ -31,8 +33,6 @@ def RenderHtmlEmail(competitionsWithHungarians, count_competitors, count_delegat
             if recorders:
                 excludedHungarianCompetitions.append(comp)
 
-    print(count_delegates, " Filip")
-    print(count_competitors, " Filip")
     return template.render(
         competitions=excludedHungarianCompetitions,
         count_competitors=count_competitors,
@@ -47,7 +47,7 @@ def GetAllImportantCompetitors(competitions, func): #Gets the important competit
     for comp in competitions:
         for competitor in func(comp.CompetitorWithRecords):
             print(competitor)
-            competitors_by_id[competitor["wca_id"]] = competitor  # Overrides if it's already appeared.
+            competitors_by_id[competitor["wca_id"]] = competitor  # felülírja, ha már volt ilyen
 
     return list(competitors_by_id.values())
 def SendEmail(html_body):

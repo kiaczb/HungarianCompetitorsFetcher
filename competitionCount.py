@@ -1,9 +1,13 @@
 import json
+import os
+from env import SCRIPT_DIR
+
+hungarians_path = os.path.join(SCRIPT_DIR, 'data', 'hungarians.json')
 
 difference = 3
 milestones = [100, 200]
 def ReadPeople():
-    with open('./data/hungarians.json', 'r', encoding="utf-8") as file:
+    with open(hungarians_path, 'r', encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -28,9 +32,9 @@ def AddCompetitionToCompetitor(competitor):
         localPeople[competitor.WcaId]["competition_count"] += 1
 
 def SaveToHungariansJson():
-    with open("./data/hungarians.json", "w", encoding="utf-8") as f:
+    with open(hungarians_path, "w", encoding="utf-8") as f:
         json.dump(localPeople, f, indent=2, ensure_ascii=False)
-    
+
 
 def IsImportantCompetitor(wcaId):
     if not wcaId or wcaId not in localPeople:

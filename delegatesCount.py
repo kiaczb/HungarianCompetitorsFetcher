@@ -1,9 +1,13 @@
 import json
+import os
+from env import SCRIPT_DIR
+
+delegates_path = os.path.join(SCRIPT_DIR, 'data', 'delegates.json')
 
 difference = 3
 milestones = [50, 100]
 def ReadPeople():
-    with open('./data/delegates.json', 'r', encoding="utf-8") as file:
+    with open(delegates_path, 'r', encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -28,7 +32,7 @@ def AddCompetitionToDelegate(delegate):
         localDelegates[delegate.WcaId]["delegated_competitions_count"] += 1
 
 def SaveToDelegatesJson():
-    with open("./data/delegates.json", "w", encoding="utf-8") as f:
+    with open(delegates_path, "w", encoding="utf-8") as f:
         json.dump(localDelegates, f, indent=2, ensure_ascii=False)
     
 
