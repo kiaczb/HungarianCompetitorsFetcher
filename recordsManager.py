@@ -1,8 +1,11 @@
 import json
 import requests
+import os
+from env import SCRIPT_DIR
+records_path = os.path.join(SCRIPT_DIR, 'data', 'records.json')
 
 def ReadRecords():
-       with open('./data/records.json', 'r') as file:
+       with open(records_path, 'r') as file:
              records = json.load(file)
        return records
 localNationalRecords = ReadRecords()
@@ -18,5 +21,5 @@ def SaveRecords():
         "european_records": recordsData["continental_records"].get("_Europe", {}),
         "hungarian_records": recordsData["national_records"].get("Hungary", {})
     }
-    with open('./data/records.json', 'w') as f:
+    with open(records_path, 'w') as f:
         json.dump(records, f, indent=4)
