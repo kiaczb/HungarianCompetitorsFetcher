@@ -6,7 +6,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from CompetitionModels.Competition import Competition
 from competitionCount import AddCompetitionToCompetitor, SaveToHungariansJson
-from delegatesCount import IsDelegate, AddCompetitionToDelegate, SaveToDelegatesJson
+from delegatesCount import IsHungarianDelegate, AddCompetitionToDelegate, SaveToDelegatesJson
 import time
 def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords, badges):
     #Frissíti a versenyző rekordjait és kezeli a nemzeti és speciális rekordokat.
@@ -22,7 +22,7 @@ def UpdateRecords(record_type, value, competitor, event_id, localNationalRecords
                     competitor.Records[event_id] = [Record(record_type, value, badges[index])]
                 break
 
-def ProcessPerson(person, events):
+def ProcessPerson(person, events ,isHungarianComp):
     if person["countryIso2"] != "HU" and person["wcaId"] not in excludedCompetitorWcaIds:
         return None  # Skip non-Hungarian and non-exceptional competitors.
 
@@ -49,8 +49,7 @@ def ProcessPerson(person, events):
             if IsPersonResult(result)
         ]
 
-        if not round_result_pairs:
-            return None
+
         for _round, result in round_result_pairs:
             if not isAdvanced:
                 break
@@ -68,7 +67,7 @@ def ProcessPerson(person, events):
 
     AddCompetitionToCompetitor(competitor)
 
-    if IsDelegate(competitor):
+    if isHungarianComp and IsHungarianDelegate(competitor):
         AddCompetitionToDelegate(competitor)
     
     return competitor
@@ -101,7 +100,7 @@ def GetCompetitorsForCompetition(comp):
 
 
     with ThreadPoolExecutor() as executor:
-        results = list(executor.map(lambda p: ProcessPerson(p, events), persons))
+        results = list(executor.map(lambda p: ProcessPerson(p, events, IsHungarianCompetition(comp)), persons))
 
     SaveToHungariansJson()
     SaveToDelegatesJson()

@@ -42,5 +42,5 @@ def IsImportantDelegate(wcaId):
     for milestone in milestones:
             if (milestone-difference <= localDelegates[wcaId]["delegated_competitions_count"] <= milestone):
                 return True
-def IsDelegate(person):
+def IsHungarianDelegate(person):
     return True if person.WcaId in localDelegates else False
